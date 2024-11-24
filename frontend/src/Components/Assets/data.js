@@ -34,33 +34,6 @@ const data_product = [
     new_price: 149.99,
     old_price: 199.99,
   },
-  {
-    id: 5,
-    name: "Smartphone with Quad Camera",
-    image: p5_img,
-    new_price: 699.99,
-    old_price: 799.99,
-  },
-  {
-    id: 6,
-    name: "Electric Toothbrush",
-    image: p6_img,
-    new_price: 39.99,
-  },
-  {
-    id: 7,
-    name: "Stainless Steel Water Bottle",
-    image: p3_img,
-    new_price: 19.99,
-    old_price: 29.99,
-  },
-  {
-    id: 8,
-    name: "Noise-Canceling Headphones",
-    image: p4_img,
-    new_price: 149.99,
-    old_price: 199.99,
-  },
 ];
 
 export default data_product;
