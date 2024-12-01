@@ -57,9 +57,21 @@ const Navbar = () => {
         </li>
       </ul>
       <div className="nav-login-cart">
-        <Link style={{ textDecoration: "none" }} to="/login">
-          <button>Login</button>
-        </Link>
+        {localStorage.getItem("auth-token") ? (
+          <button
+            onClick={() => {
+              localStorage.removeItem("auth-token");
+              window.location.replace("/");
+            }}
+          >
+            Logout
+          </button>
+        ) : (
+          <Link style={{ textDecoration: "none" }} to="/login">
+            <button>Login</button>
+          </Link>
+        )}
+
         <Link style={{ textDecoration: "none" }} to="/cart">
           <img src={cart} alt="cart" className="cart-image" />
         </Link>

@@ -6,9 +6,11 @@ const jwt = require("jsonwebtoken");
 const multer = require("multer");
 const path = require("path");
 const cors = require("cors");
+const { type } = require("os");
+const { error } = require("console");
 
 app.use(express.json());
-app.use(cors());
+app.use(cors({}));
 
 //mongodb connection
 
@@ -77,6 +79,8 @@ const Product = mongoose.model("Product", {
   },
 });
 
+//CREATING API FOR ADD PRODUCT
+
 app.post("/addproduct", async (req, res) => {
   let products = await Product.find({});
   let id;
@@ -105,6 +109,173 @@ app.post("/addproduct", async (req, res) => {
     success: true,
     name: req.body.name,
   });
+});
+
+//CREATING API FOR DELETING PRODUCT
+
+app.post("/removeproduct", async (req, res) => {
+  await Product.findOneAndDelete({ id: req.body.id });
+  console.log("Removed");
+
+  res.json({
+    success: true,
+    name: req.body.name,
+  });
+});
+
+//API FOR GETTING ALL THE PRODUCTS
+
+app.get("/allproducts", async (req, res) => {
+  let products = await Product.find({});
+  console.log("All products fetched");
+  res.send(products);
+});
+
+const Users = mongoose.model("Users", {
+  name: {
+    type: String,
+  },
+  email: {
+    type: String,
+    unique: true,
+  },
+  password: {
+    type: String,
+  },
+  cartData: {
+    type: Object,
+  },
+  date: {
+    type: Date,
+    default: Date.now,
+  },
+});
+
+// CREATING ENDPOINT FOR CREATING THE USER
+
+app.post("/signup", async (req, res) => {
+  let check = await Users.findOne({ email: req.body.email });
+
+  if (check) {
+    return res.status(400).json({
+      success: false,
+      errors: "existing user found with same email id",
+    });
+  }
+  let cart = {};
+  for (let i = 0; i < 300; i++) {
+    cart[i] = 0;
+  }
+
+  const user = new Users({
+    name: req.body.username,
+    email: req.body.email,
+    password: req.body.password,
+    cartData: cart,
+  });
+
+  await user.save();
+
+  const data = {
+    user: {
+      id: user.id,
+    },
+  };
+
+  const token = jwt.sign(data, "secret_ecom");
+  res.json({ success: true, token });
+});
+
+//CREATING ENDPOINT FOR USER LOGIN
+
+app.post("/login", async (req, res) => {
+  let user = await Users.findOne({ email: req.body.email });
+  if (user) {
+    const passCompare = req.body.password === user.password;
+    if (passCompare) {
+      const data = {
+        user: {
+          id: user.id,
+        },
+      };
+      const token = jwt.sign(data, "secret_ecom");
+      res.json({ success: true, token });
+    } else {
+      res.json({ success: false, errors: "Wrong password" });
+    }
+  } else {
+    res.json({ success: false, errors: "Wrong email id" });
+  }
+});
+
+//CREATING ENDPOINT FOR NEW COLLECTION DATA
+
+app.get("/newcollections", async (req, res) => {
+  let products = await Product.find({});
+  let newcollection = products.slice(1).slice(-5);
+  console.log("NewCollections fetched");
+  res.send(newcollection);
+});
+
+//CREATING ENPOINT FOR POPULAR IN LIGHTING
+
+app.get("/popularinlighting", async (req, res) => {
+  let products = await Product.find({ category: "lighting" });
+  let popular_in_lighting = products.slice(0, 3);
+  console.log("popular in lighting fetched");
+  res.send(popular_in_lighting);
+});
+
+//CREATING MIDDLEWARE TO FETCH USER
+
+const fetchUser = async (req, res, next) => {
+  const token = req.header("auth-token");
+  if (!token) {
+    res.status(401).send({ errors: "please authenticate using valid token" });
+  } else {
+    try {
+      const data = jwt.verify(token, "secret_ecom");
+      req.user = data.user;
+      next();
+    } catch (error) {
+      res
+        .status(401)
+        .send({ errors: "please authenticate using a valid token" });
+    }
+  }
+};
+
+//CREATING ENDPOINT FOR ADDING PRODUCTS IN CARTDATA
+app.post("/addtocart", fetchUser, async (req, res) => {
+  let userData = await Users.findOne({ _id: req.user.id });
+  userData.cartData[req.body.itemId] += 1;
+  await Users.findOneAndUpdate(
+    { _id: req.user.id },
+    { cartData: userData.cartData }
+  );
+  res.status(200).json({ message: "Added to cart successfully" });
+});
+
+//CREATING ENDPOINT TO REMOVE PRODUCTS FROM CARTDATA
+
+app.post("/removefromcart", fetchUser, async (req, res) => {
+  console.log("removed", req.body.itemId);
+  let userData = await Users.findOne({ _id: req.user.id });
+  if (userData.cartData[req.body.itemId] > 0)
+    userData.cartData[req.body.itemId] -= 1;
+  await Users.findOneAndUpdate(
+    { _id: req.user.id },
+    { cartData: userData.cartData }
+  );
+  res.status(200).json({ message: "Removed from cart successfully" });
+});
+
+//CREATING ENDPOINT TO GET CART DATA
+
+app.post("/getcart", fetchUser, async (req, res) => {
+  console.log("GetCart");
+  let userData = await Users.findOne({ _id: req.user.id });
+  res.status(200).json({ message: userData.cartData });
 });
 
 app.listen(port, (error) => {
