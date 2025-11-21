@@ -30,8 +30,8 @@ Designed with a clean architecture and scalable folder structure for real-world 
 - React.js  
 - React Hooks  
 - Axios  
-- Context API / State Management  
-- CSS / Bootstrap / Tailwind (if used)
+- Context API
+- CSS / Bootstrap
 
 ### **Backend**
 - Node.js  
@@ -49,8 +49,3 @@ Designed with a clean architecture and scalable folder structure for real-world 
 - Postman  
 - Git & GitHub  
 - VS Code  
-
----
-
-## 📁 Folder Structure (Example)
-
